@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="data:," />
+    <meta name="description" content="เกม voxel เล่นบนเบราว์เซอร์: เดิน ขุด วางบล็อก และบันทึกโลกไว้ใน localStorage" />
+    <title>minecraft-web — voxel game</title>
+    <style>html,body{color:#f2f7ff;background:#0d1420;height:100%;margin:0;font:13px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;overflow:hidden}#app{position:fixed;inset:0}canvas#game{cursor:crosshair;touch-action:none;width:100%;height:100%;display:block}#boot{z-index:40;background:radial-gradient(circle at 50% 30%,#16233a,#0a0f18 70%);flex-direction:column;justify-content:center;align-items:center;gap:14px;display:flex;position:fixed;inset:0}#boot h1{letter-spacing:.14em;text-transform:uppercase;opacity:.9;margin:0;font-size:20px}#boot-track{background:#ffffff0f;border:1px solid #ffffff40;border-radius:4px;width:min(320px,60vw);height:6px;overflow:hidden}#boot-bar{background:linear-gradient(90deg,#8fe388,#2fa84f);width:0%;height:100%;transition:width .12s linear}#boot-text{opacity:.75;font-size:12px}#play{z-index:30;text-align:center;box-sizing:border-box;cursor:pointer;-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);background:#080c14b8;flex-direction:column;justify-content:center;align-items:center;gap:16px;padding:24px;display:none;position:fixed;inset:0}#play.shown{display:flex}#play h1{letter-spacing:.08em;margin:0;font-size:26px}#play .go{background:#1c283ad9;border:1px solid #fff6;border-radius:8px;padding:10px 22px;font-size:15px}#play ul{opacity:.85;max-width:640px;margin:0;padding:0;font-size:12.5px;line-height:1.8;list-style:none}#play li b{color:#ffd166;font-weight:700}#play .note{opacity:.55;font-size:11.5px}#play a{color:#8fc7f0}#hint{z-index:20;pointer-events:none;opacity:.85;background:#0a0e1680;border-radius:6px;padding:4px 10px;font-size:11.5px;position:fixed;bottom:62px;left:50%;transform:translate(-50%)}</style>
+    <script type="module" crossorigin src="./assets/main-Bn5D4vwU.js"></script>
+    <link rel="modulepreload" crossorigin href="./assets/game-DWP4vRp1.js">
+    <link rel="modulepreload" crossorigin href="./assets/interaction-BPCAOcDG.js">
+    <link rel="modulepreload" crossorigin href="./assets/player-CbEKmWpw.js">
+  </head>
+  <body>
+    <div id="app">
+      <canvas id="game"></canvas>
+    </div>
+
+    <div id="boot">
+      <h1>minecraft-web</h1>
+      <div id="boot-track"><div id="boot-bar"></div></div>
+      <div id="boot-text">กำลังสร้างโลก… 0%</div>
+    </div>
+
+    <div id="play">
+      <h1>minecraft-web</h1>
+      <div class="go">คลิกเพื่อเล่น</div>
+      <ul>
+        <li><b>W A S D</b> เดิน · <b>Shift</b> วิ่ง · <b>Space</b> กระโดด</li>
+        <li><b>เมาส์</b> มองรอบตัว (คลิกจอ = ล็อกเมาส์, <b>ESC</b> ปลดล็อก)</li>
+        <li><b>คลิกซ้ายค้าง</b> ขุดบล็อก · <b>คลิกขวา</b> วางบล็อกที่เลือกไว้</li>
+        <li><b>1-9</b> หรือ <b>ล้อเมาส์</b> เลือกช่องของ hotbar ด้านล่าง</li>
+        <li><b>F3</b> เปิด/ปิดข้อมูล debug · ปุ่ม <b>Reset world</b> = เริ่มโลกใหม่ (คลิกสองครั้ง)</li>
+      </ul>
+      <div class="note">
+        โลกที่ขุด/วางจะถูกบันทึกอัตโนมัติทุก 10 วินาที และตอนปิดแท็บ (เก็บใน localStorage ของเบราว์เซอร์)
+      </div>
+      <div class="note">หน้าเดโมของ engine: <a href="./engine.html">engine.html</a></div>
+    </div>
+
+    <div id="hint">คลิกที่จอเพื่อล็อกเมาส์ · ESC เพื่อปลดล็อก</div>
+
+  </body>
+</html>

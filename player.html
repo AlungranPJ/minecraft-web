@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="data:," />
+    <title>voxel engine demo - first person player</title>
+    <style>html,body{background:#9ec9ef;height:100%;margin:0;font:13px/1.45 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;overflow:hidden}#app{position:fixed;inset:0}canvas#game{cursor:crosshair;width:100%;height:100%;display:block}#hud{white-space:pre;color:#f2f7ff;pointer-events:none;background:#0c121c8c;border:1px solid #ffffff2e;border-radius:6px;padding:8px 10px;position:fixed;top:8px;left:8px}#hint{text-align:center;color:#f6faff;pointer-events:none;background:#0c121cb3;border:1px solid #ffffff38;border-radius:8px;padding:10px 16px;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%)}#help{color:#eaf2ff;pointer-events:none;background:#0c121c73;border-radius:6px;padding:5px 10px;position:fixed;bottom:8px;left:50%;transform:translate(-50%)}#crosshair{pointer-events:none;mix-blend-mode:difference;width:14px;height:14px;margin:-7px 0 0 -7px;position:fixed;top:50%;left:50%}#crosshair:before,#crosshair:after{content:"";background:#fff;position:absolute}#crosshair:before{width:2px;height:14px;top:0;left:6px}#crosshair:after{width:14px;height:2px;top:6px;left:0}</style>
+    <script type="module" crossorigin src="./assets/player-BVC8X4n5.js"></script>
+    <link rel="modulepreload" crossorigin href="./assets/game-DWP4vRp1.js">
+    <link rel="modulepreload" crossorigin href="./assets/player-CbEKmWpw.js">
+  </head>
+  <body>
+    <div id="app">
+      <canvas id="game"></canvas>
+      <div id="crosshair"></div>
+      <div id="hud">booting…</div>
+      <div id="hint">click to play</div>
+      <div id="help"></div>
+    </div>
+  </body>
+</html>
