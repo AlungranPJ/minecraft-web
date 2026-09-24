@@ -1,64 +1,172 @@
-# minecraft-web — voxel engine (Three.js + Vite)
+# minecraft-web — voxel sandbox เล่นได้บนเว็บ
 
-แกนกลางของเกม Minecraft-like ที่รันบนเบราว์เซอร์แบบ static ล้วน (ไม่มี backend)
-ประกอบด้วย chunk system, greedy meshing, terrain generation ด้วย noise และ chunk manager
-ที่สตรีม chunk รอบผู้เล่นแบบไม่บล็อกเฟรม
+เกม voxel แบบ Minecraft-like ที่รันบนเบราว์เซอร์แบบ static ล้วน (ไม่มี backend):
+เดินในโลกที่ generate ด้วย noise, ขุด/วางบล็อก, hotbar 9 ช่อง, HUD, save/load ในเครื่อง
+ประกอบจาก 3 โมดูล (engine + player + interaction) ที่รวมอยู่ในหน้าเดียวคือ `index.html`
 
-สถานะ: **public API ใน `src/engine/index.ts` พร้อมใช้แล้ว** และมี first person player module ใน `src/player/`
-ใช้ต่อได้เลยสำหรับงาน dig-place / HUD / integration
+**เล่นได้เลย:** https://alungranpj.github.io/minecraft-web/ — ไม่ต้องติดตั้งอะไร
+(ต้องมี WebGL2: Chrome / Edge / Firefox / Safari เวอร์ชันใหม่มีหมด)
+
+source: https://github.com/AlungranPJ/minecraft-web (branch `main` = โค้ด, branch `gh-pages` = build ที่ deploy)
 
 ![horizon](docs/screenshot-horizon.png)
 
-## วิธีรัน
+## วิธีเล่น (ปุ่มทั้งหมด)
+
+| ปุ่ม | ทำอะไร |
+|---|---|
+| คลิกที่จอ (หรือปุ่ม "คลิกเพื่อเล่น") | ล็อกเมาส์ เริ่มเล่น |
+| ขยับเมาส์ | หมุนมุมมอง (pitch จำกัด +/-89 องศา) |
+| WASD / ลูกศร | เดินหน้า-ถอย-ซ้าย-ขวา |
+| Shift (ค้าง) | วิ่ง |
+| Space | กระโดด |
+| คลิกซ้ายค้าง | ขุดบล็อกที่เป้า (มี progress bar กลางจอ, ใบไม้ 0.3 วิ → หิน 1.5 วิ) |
+| คลิกขวา | วางบล็อกจากช่องที่เลือก (คลิกค้าง = วางซ้ำทุก 0.22 วิ) |
+| 1-9 | เลือกช่อง hotbar |
+| ล้อเมาส์ | เลื่อนช่อง hotbar |
+| F3 | เปิด/ปิด debug overlay (fps, พิกัด, chunk, เป้า, จำนวน edit, เวลา save) |
+| ESC | ปล่อยเมาส์ (ต้องกดก่อนถึงจะคลิกปุ่มบนจอได้) |
+| ปุ่ม Reset world (ขวาบน) | คลิกสองครั้ง = ล้างโลก ผู้เล่น และ save |
+
+หมายเหตุการเล่น: เมาส์ที่ล็อกอยู่จะส่ง event ไปที่ canvas ทั้งหมด ปุ่มบน HUD (Reset world)
+จึงกดได้หลังกด ESC แล้วเท่านั้น และอย่าขุดบล็อกที่ตัวเองยืนอยู่ — ผู้เล่นจะตกลงไปในหลุม
+แล้ววางบล็อกกลับที่เดิมไม่ได้ (ระบบปฏิเสธด้วย "block would hit you" ตามกติกาปกติ)
+
+## วิธีรัน (dev)
 
 ```bash
 npm install
 npm run dev          # http://localhost:5173  (dev server + HMR)
 npm run build        # tsc --noEmit && vite build -> dist/ (static, เปิดจาก web server ใดก็ได้)
-npm run preview       # เสิร์ฟ dist/ ที่ http://localhost:4173
+npm run preview      # เสิร์ฟ dist/ ที่ http://localhost:4173
 npm run typecheck    # tsc --noEmit
 ```
 
-`dist/` ตั้ง `base: './'` ไว้แล้ว ย้ายไปวางที่ path ไหนก็ได้
+หน้าในโปรเจกต์:
 
-หน้า `/player.html` คือ first person gameplay demo: คลิกซ้ายเพื่อ lock เมาส์, WASD เดิน,
-Shift วิ่ง, Space กระโดด, ESC ปลด lock
+| หน้า | คืออะไร |
+|---|---|
+| `/` (index.html) | **ตัวเกม** — engine + first person player + ขุด/วาง/HUD/save (`src/main.ts`) |
+| `/engine.html` | เดโม engine (กล้อง spectator + HUD) — หน้าที่เทสต์ engine ยิงใส่ (`src/engineDemo.ts`) |
+| `/player.html` | เดโม first person player เดี่ยว ๆ (`src/player-demo.ts`) |
+| `/interaction.html` | เดโมขุด/วาง/HUD เดี่ยว ๆ (`src/interactionDemo.ts`) |
 
-## Player module
+`dist/` ตั้ง `base: './'` ไว้แล้ว ย้ายไปวางที่ path ไหนก็ได้ ไม่ต้องแก้ base
 
-โค้ดอยู่ที่ `src/player/` และเชื่อมกับ engine ด้วย `FirstPersonPlayer.mount(game)`
-ซึ่งใช้ `game.onFrame()` จึงอัปเดตผู้เล่นก่อน chunk streaming และ render ในเฟรมเดียวกัน
+## วิธี deploy (GitHub Pages)
 
-```ts
-import { createGame } from './engine';
-import { FirstPersonPlayer } from './player';
+ทำแบบนี้แล้ว (repo `AlungranPJ/minecraft-web`, Pages = branch `gh-pages` / root):
 
-const game = createGame(canvas, { controls: 'none' });
-const spawn = game.world.spawnPoint(0, 0);
-const player = new FirstPersonPlayer({
-  world: game.world,
-  camera: game.camera,
-  element: canvas,
-  position: [spawn.x, spawn.y, spawn.z],
-});
-player.mount(game);
+```bash
+npm run build                                   # -> dist/
+# ยก dist/ ขึ้น branch gh-pages (source อยู่ branch main แยกกัน)
+mkdir -p /tmp/pages && cp -r dist/. /tmp/pages/ && touch /tmp/pages/.nojekyll
+cd /tmp/pages && git init -b gh-pages && git add -A && git commit -m deploy
+git remote add origin https://github.com/AlungranPJ/minecraft-web.git && git push -f origin gh-pages
 ```
 
-รายละเอียดค่าฟิสิกส์, keymap, collision และวิธีทดสอบอยู่ใน `docs/player-controller.md`
+`gh-pages` ต้องมี `.nojekyll` (vite ใส่ชื่อไฟล์ asset ที่มี `-` และ hash ไม่มี underscore
+แต่กันไว้ให้ชัวร์) Netlify / Cloudflare Pages ใช้ `dist/` เป็น publish directory ตรง ๆ ได้เลย
+ไม่ต้องตั้ง base path เพราะ build ใช้ relative path
 
-## ปุ่มควบคุมในเดโม
+## เทสต์ทั้งหมด (รันซ้ำได้)
 
-ลากเมาส์ = หมุนกล้อง, WASD = เคลื่อนที่, Space / Shift = ขึ้น / ลง, ลูกกลิ้ง = ปรับความเร็ว,
-คลิก = ยิง raycast แล้วโชว์ข้อมูลบล็อกที่เล็ง (ผ่าน `window.__VOXEL`)
+```bash
+npm run test:smoke           # 62 checks  (engine, node)
+npm run test:player          # 114 checks (player physics/collision, node)
+npm run test:interaction     # 117 checks (ขุด/วาง/hotbar/save, node)
+npm run test:perf            # 28 checks  (adaptive ladder + ต้นทุนต่อ chunk, node)
 
-## Public API (สัญญา)
+npm run preview &            # ต้องมี server เสิร์ฟ dist/ ก่อนเทสต์เบราว์เซอร์
+npm run test:browser         # 23 checks  (engine.html, Chrome จริงผ่าน CDP)
+npm run test:player:browser  # 41 checks  (player.html)
+npm run test:interaction:browser # 56 checks (interaction.html)
+npm run test:game:browser    # 64 checks  (index.html = ตัวเกม + checklist acceptance)
+npm run perf:report          # วัด fps ทุกระดับคุณภาพ + CPU throttle 12x -> test-output/perf-report.json
+```
+
+ชี้เทสต์ตัวเกมไปที่เว็บที่ deploy แล้วได้เลย (ใช้ checklist ชุดเดียวกัน):
+
+```bash
+PAGE_URL=https://alungranpj.github.io/minecraft-web/ npm run test:game:browser
+```
+
+ต้องมี Chrome ที่ `C:/Program Files/Google/Chrome/Application/chrome.exe` (override ด้วย `CHROME_PATH`)
+
+## สถาปัตยกรรม: boot flow ของตัวเกม
+
+`src/main.ts` ประกอบของ 3 ชั้นเข้าด้วยกัน โดยไม่แก้ public API ของ engine:
+
+```
+createGame(canvas, { controls: 'none', renderDistance: 6, maxChunkOpsPerFrame: 2 })
+  -> FirstPersonPlayer({ world, camera, element: canvas, spawnX, spawnZ })
+  -> createFirstPersonPlayerAdapter(player)      // ห่อผู้เล่นเป็น PlayerAdapter ให้ชั้น interaction
+  -> new InteractionSession({ world, scene, player: adapter, atlasCanvas, hudOptions, highlight })
+  -> AdaptiveQuality()                           // บันไดคุณภาพเมื่อ fps ตก
+
+game.onFrame((dt) => {
+  player.update(dt)      // ฟิสิกส์ + กล้อง + mouse look
+  session.update(dt)     // apply edit -> chunk, ขุด/วาง, HUD, autosave 10 วิ
+  ทุก 0.5 วิ: อ่าน fps -> adaptive.update(dt, fps) -> ถ้าบันไดขยับก็ apply (render distance / pixel ratio / chunk ops)
+})
+```
+
+boot flow: **loading screen** (รอ chunk รอบตัวผู้เล่น meshed ครบวงรัศมี 3 = 45 chunk, มี timeout 20 วิ)
+→ **overlay "คลิกเพื่อเล่น"** (แสดงปุ่มทั้งหมด) → คลิกแล้วล็อกเมาส์เข้าเกม
+(`bootInfo()` บน `window.__GAME` รายงาน `loadMs`, quality, renderDistance, restored)
+
+### debug / test surface
+
+`window.__GAME` มี `game, world, scene, camera, renderer, player, session, hotbar, edits, hud, adaptive`
+และเมธอดสำหรับเทสต์/คอนโซล: `bootInfo()`, `stats()`, `target()`, `aimAtBlock()`, `teleport()`,
+`goToSurface()`, `setLook()`, `getBlock/setBlock`, `save()`, `reset()`, `forceQuality(i)`, `qualityChanges`,
+`dig.begin/end`, `place.begin/end/once` — เทสต์เบราว์เซอร์ทั้งหมดขับผ่าน surface นี้ (ไม่ mock)
+
+## Performance: ทำอะไรไปบ้าง
+
+| เทคนิค | ที่ไหน | ผล |
+|---|---|---|
+| บันไดคุณภาพอัตโนมัติ (render distance + pixel ratio + chunk ops) | `src/perf/adaptive.ts` + `main.ts` | fps ตกต่อเนื่อง 2.5 วิ → ลดขั้น, fps เกิน 57 ต่อเนื่อง 6 วิ → ขึ้นขั้น (ไม่เกินค่าเริ่มต้น) |
+| chunk streaming จำกัด ops ต่อเฟรม | `world.ts` (`maxChunkOpsPerFrame`) | ไม่มีเฟรม spike ตอนโหลด chunk ใหม่ |
+| ไม่ allocate ในลูปเฟรม | `game.ts` (index loop แทน `callbacks.slice()`), `main.ts` (อ่าน fps ทุก 0.5 วิ ไม่ใช่ทุกเฟรม) | ไม่มี garbage ต่อเฟรม |
+| chunk mesh ไม่ขยับ → ปิด matrix update | `world.ts` (`matrixAutoUpdate = false` + `updateMatrix()` ครั้งเดียว) | ตัดงาน matrix 137 ครั้ง/เฟรม |
+| greedy meshing + texture atlas เดียว | `mesher.ts`, `atlas.ts` | 1 material ทั้งโลก, draw call = จำนวน chunk ที่เห็น |
+| เปลี่ยน render distance แล้ว stream ทันที | `world.ts` (`update()` ตรวจว่า radius เปลี่ยน) | บันไดขึ้นขั้นกลับได้ผลแม้ยืนนิ่ง (เดิมรอเดินข้าม chunk) |
+| ไม่ย้าย terrain gen ไป Web Worker | ตัดสินใจจากตัวเลขจริง (ดูด้านล่าง) | gen 0.28 ms/chunk = ถูกกว่า overhead ของ worker มาก; ที่แพงคือ meshing 5.89 ms ซึ่งคุมด้วย ops/เฟรมอยู่แล้ว |
+
+## ผลการตรวจสอบ (วัดจริง ไม่ได้ประมาณ)
+
+รันบน Lenovo Yoga 7i (Intel Core Ultra 7 258V, Intel Arc 140V, ANGLE/D3D11, WebGL 2.0),
+Chrome ผ่าน CDP, viewport 1280x720:
+
+| สิ่งที่วัด | ผล |
+|---|---|
+| `npm run typecheck` / `npm run build` | ผ่านทั้งคู่ ไม่มี type error เหลือ |
+| smoke (node) รวม | 62 + 114 + 117 + 28 = **321 checks ผ่านทั้งหมด** |
+| browser (Chrome จริง) รวม | 23 + 41 + 56 + **64** = **184 checks ผ่านทั้งหมด** |
+| เทสต์ตัวเกม (`tests/game.browser.test.mjs`) | **64 checks ผ่านทั้งหมด** ทั้งบน `http://localhost:4173` และบน URL ที่ deploy แล้ว |
+| โหลดหน้าแรก (deployed) | 1091 ms wall clock (446 ms จากเริ่มโมดูลถึงเล่นได้) — เกณฑ์ 5 วิ ผ่านสบาย |
+| ขนาดที่โหลดจริง | index.html 1.8 KB gzip + bundle 192 KB gzip (three.js รวมอยู่) |
+| fps บนเครื่องนี้ | 60.0 fps (ติด vsync) ทุก viewport/ทุกระดับคุณภาพ, ทั้งยืนนิ่งและเดิน |
+| draw call / triangle | RD 6: 137 chunk, 50 draw calls, 23,762 triangles · RD 3: 81 chunk, 30 draws, 14,296 tris |
+| ต้นทุนต่อ chunk (node) | generate 0.28 ms + mesh 5.89 ms = 6.17 ms/chunk (เฉลี่ย 256 quads) → 2 chunk/เฟรม = 12.3 ms จากงบ 16.7 ms |
+| บันไดคุณภาพกับเครื่องช้ากว่า (CPU throttle 12x ผ่าน CDP) | เริ่มที่ high 26 fps → บันไดลดเอง high→medium @18.7 fps → low @41.3 → minimal @20 → นิ่งที่ minimal **50 fps** → ปลด throttle แล้วกลับมา high 60 fps เอง |
+| ตรวจ mesh | ray ผ่าน frustum ทั้งจอ: 100% (มองลง), 97.5% (มุมใกล้พื้น), 66.9% (ขอบฟ้า) ตรงกับข้อมูลบล็อก; รูในภาพ 0.00% |
+
+ตัวเลข fps ทั้งชุดอยู่ใน `test-output/perf-report.json` (สร้างด้วย `npm run perf:report`)
+
+เทสต์เบราว์เซอร์ต้องมี server เสิร์ฟอยู่ (`npm run preview`) และตั้ง `PAGE_URL` ถ้าไม่ใช่ 4173
+เทสต์ตัวเกมมี checklist ตรงตาม acceptance: โหลด < 5 วิ, คีย์บอร์ด+เมาส์เล่นได้จริง (เดิน/วิ่ง/กระโดด/หันกล้อง),
+ขุด/วางด้วยปุ่มเมาส์จริง, save/load ผ่าน reload, ไม่มี error ใน console, fps >= 30
+
+## Public API (สัญญา) — engine
 
 ```ts
 import { createGame, Block, type BlockId } from './engine';
 
 const game = createGame(canvas, { seed: 1337, renderDistance: 6 });
 
-world.getBlock(x, y, z): BlockId          // 0 = AIR, อ่านนอกโลก/nอกช่วง y ได้คืน AIR
+world.getBlock(x, y, z): BlockId          // 0 = AIR, อ่านนอกโลก/นอกช่วง y ได้คืน AIR
 world.setBlock(x, y, z, id): void         // เขียนแล้ว mark chunk (และ chunk ข้างเคียงถ้าติดขอบ) ให้ remesh เอง
 world.raycast(origin, direction, maxDist): RaycastHit | null
 createGame(canvas, opts): Game            // { scene, camera, world, renderer, onFrame(cb), dispose(), ... }
@@ -84,6 +192,9 @@ raycast ข้ามน้ำ (liquid) ไปโดนของแข็งข�
 `GameOptions`: `seed`, `renderDistance` (default 6), `maxChunkOpsPerFrame` (default 2),
 `controls: 'spectator' | 'none'` (default spectator), `fov`, `near`, `far`, `startPosition`,
 `fog`, `background`, `maxPixelRatio`, `autostart`, `worldMaterial`
+
+`world.renderDistance` และ `world.maxChunkOpsPerFrame` เขียนใหม่ได้ตอน runtime (บันไดคุณภาพใช้อยู่)
+— เปลี่ยนแล้วระบบ stream วงใหม่ให้เองในเฟรมถัดไป
 
 ### helper เสริมที่ใช้บ่อย (ไม่ใช่สัญญา fix แต่มีให้แล้ว)
 
@@ -129,8 +240,6 @@ src/player/
   collision.ts swept axis-separated AABB ขนาด 0.6 x 1.8
   input.ts     WASD/arrow/Space/Shift และ remappable keymap
   look.ts      pointer lock, drag fallback และ pitch clamp +/-89 องศา
-src/main.ts    หน้า engine demo + HUD + window.__VOXEL
-src/player-demo.ts หน้า first person demo + window.__PLAYER
 src/interaction/
   index.ts     public interaction exports (ใช้ต่อจาก engine API เท่านั้น)
   controller.ts ขุด (กดค้าง ตาม hardness 0.3-1.5 วิ) + วาง + กฎปฏิเสธทุกข้อ
@@ -138,12 +247,18 @@ src/interaction/
   diffs.ts     EditTracker: diff เทียบ terrain ที่ generate จาก seed, apply เข้า chunk ที่โหลดอยู่
   storage.ts   SaveStore: localStorage, ตรวจ version/seed, กันข้อมูลเสีย/โควตาเต็ม
   session.ts   InteractionSession: ประกอบทุกอย่าง + autosave 10 วิ + reset world + debug info
-  player.ts    PlayerBody (เท้า + AABB 0.6x1.8) และ adapter ที่ห่อกล้อง
+  player.ts    PlayerBody (เท้า + AABB 0.6x1.8) และ adapter ที่ห่อกล้อง/FirstPersonPlayer
   hud.ts       crosshair / progress bar / hotbar + ไอคอน / counts / debug F3 / toast / ปุ่ม reset
   highlight.ts กรอบเป้าบล็อก + แอนิเมชันตอนขุด
-player.html    entry point ของ first person demo
-interaction.html entry point ของ interaction demo (ขุด/วาง/HUD/save)
-tests/         engine, player และ interaction smoke/browser tests
+src/perf/
+  adaptive.ts  AdaptiveQuality: บันไดคุณภาพ (renderDistance/pixelRatio/chunkOps) ล้วน ๆ ไม่แตะ DOM
+src/main.ts         ตัวเกม (index.html): boot flow + ต่อทุกโมดูล + window.__GAME
+src/engineDemo.ts   เดโม engine (engine.html) + window.__VOXEL
+src/player-demo.ts  เดโม player (player.html) + window.__PLAYER
+src/interactionDemo.ts เดโม interaction (interaction.html) + window.__VOXEL_INTERACTION
+index.html     entry point ของตัวเกม
+engine.html / player.html / interaction.html  entry point ของเดโมแต่ละชั้น
+tests/         smoke (node) + browser (Chrome/CDP) ของทุกชั้น + perf report
 docs/save-format.md  รูปแบบไฟล์ save: เก็บอะไรบ้างและโหลดกลับอย่างไร
 ```
 
@@ -157,11 +272,13 @@ docs/save-format.md  รูปแบบไฟล์ save: เก็บอะไ�
   ต้นไม้: WOOD สูง 4-6 + ใบ LEAVES (มี margin 3 บล็อก ต้นที่คร่อมขอบ chunk จึงไม่ขาด)
 - 1 material ต่อทั้งโลก (`MeshLambertMaterial` + vertex colors RGBA) → draw call = จำนวน chunk ที่เห็น
 - greedy meshing รวม quad เฉพาะ face ที่ติดกันชนิดเดียวกัน → ลด quad ลง ~3-8 เท่า (16x16 slab 576 faces → 6 quads)
+- บันไดคุณภาพ: `high` RD 6 / dpr 1.5 / 2 ops · `medium` RD 5 / dpr 1.25 / 1 op · `low` RD 4 / dpr 1.0 / 1 op · `minimal` RD 3 / dpr 0.85 / 1 op
+  (ลดขั้นเมื่อ fps < 45 ต่อเนื่อง 2.5 วิ, ขึ้นขั้นเมื่อ fps > 57 ต่อเนื่อง 6 วิ, ไม่ขึ้นเกินค่าเริ่มต้น)
 
 ## Interaction: ขุด/วาง + hotbar/HUD + save/load
 
-งานของ task `t_ff52a7e8` อยู่ใน `src/interaction/` และใช้ **เฉพาะ** public API ของ engine
-(`world.getBlock`, `world.setBlock`, `world.raycast`) ไม่แก้ engine แม้แต่บรรทัดเดียว
+ชั้น interaction ใช้ **เฉพาะ** public API ของ engine (`world.getBlock`, `world.setBlock`, `world.raycast`)
+ไม่แก้ engine
 
 ```ts
 import { InteractionSession, createFirstPersonPlayerAdapter } from './interaction';
@@ -201,61 +318,27 @@ game.onFrame((dt) => {
   โหลดกลับอัตโนมัติเมื่อเปิดหน้าใหม่ กดปุ่ม reset world สองครั้งเพื่อคืนโลกเป็น terrain ตั้งต้น
   รายละเอียดรูปแบบไฟล์: [`docs/save-format.md`](docs/save-format.md)
 
-### ปุ่มในหน้า interaction demo
-
-`npm run dev` แล้วเปิด `/interaction.html` (หรือ `npm run preview` → `/interaction.html`)
-
-| ปุ่ม | ทำอะไร |
-|---|---|
-| คลิกซ้ายค้าง | ขุดบล็อกที่เป้า (กรอบดำ + progress bar ที่กลางจอ) |
-| คลิกขวา | วางบล็อกจากช่องที่เลือก |
-| 1-9 / ล้อเมาส์ | เลือกช่อง hotbar |
-| F3 | เปิด/ปิด debug overlay |
-| คลิกที่จอ | ล็อกเมาส์ (ESC ปล่อย) |
-| WASD, Space, C, Shift | บินในเดโมนี้ (เป็น rig สาธิต ไม่มีแรงโน้มถ่วง; ตัวจริงคือ `src/player/`) |
-| ปุ่ม Reset world (ขวาบน) | คลิกสองครั้ง = ล้างโลก ผู้เล่น และ save |
-
-## ผลการตรวจสอบ (วัดจริง ไม่ได้ประมาณ)
-
-รันบน Lenovo Yoga 7i (Intel Arc 140V, ANGLE/D3D11, WebGL 2.0), Chrome ผ่าน CDP, viewport 1280x720:
-
-| สิ่งที่วัด | ผล |
-|---|---|
-| `npm run typecheck` / `npm run build` | ผ่านทั้งคู่ ไม่มี type error เหลือ (`tsc --noEmit` เงียบ) |
-| `npx tsx tests/engine.smoke.test.ts` | 62 checks ผ่านทั้งหมด (terrain/mesher/raycast/chunk manager) |
-| `npx tsx tests/player.smoke.test.ts` | 114 checks ผ่านทั้งหมด (physics/collision/input/look/player wiring) |
-| `node tests/browser.test.mjs` | 23 checks ผ่านทั้งหมด |
-| `node tests/player.browser.test.mjs` | 41 checks ผ่านทั้งหมด, first person 120 fps ใน acceptance arena |
-| `npx tsx tests/interaction.smoke.test.ts` | 117 checks ผ่านทั้งหมด (hotbar, diff, ขุดตาม hardness, กฎการวางทุกข้อ, save/load/reset, ต่อกับ `FirstPersonPlayer` จริง) |
-| `node tests/interaction.browser.test.mjs` | 56 checks ผ่านทั้งหมด, รันซ้ำ 3 รอบไม่ flake (เมาส์/คีย์บอร์ด/wheel จริง, autosave 10 วิ จริง, reload แล้วโลกเหมือนเดิม, ปุ่ม reset) |
-| fps ของหน้า interaction | 120.0 fps (8.34 ms/เฟรม) หลัง chunk ครบ 137 chunk — headless + swiftshader, vsync ปิด |
-| fps | 60.0 fps (16.7 ms/เฟรม, ติด vsync) ทั้งตอนยืนนิ่งและหลังเดิน 960 บล็อก |
-| chunk ที่ render | 137 chunk (ทั้งวง), draw call 53-55, ~25-28k triangles, 60 draw ไม่มี spike |
-| memory ตอนเดินไกล | chunk ในหน่วยความจำคงที่ 145 ตลอด 6 จุด (walk 960 บล็อก), GPU geometry 57-61, unload สะสม 814 |
-| ความครบของ mesh | ยิง ray ผ่าน frustum ทั้งจอ: 100% โดนพื้น (มองลง), 97.5% (มุมใกล้พื้น), 66.9% (มุมขอบฟ้า) ตรงกับข้อมูลบล็อก |
-| รูใน mesh | เปลี่ยน background เป็น magenta แล้วมองตรงลง: 0.00% พิกเซลที่เป็น background |
-| API ในเบราว์เซอร์ | getBlock/setBlock/raycast ทำงานจริง, setBlock สั่ง remesh จริง (rebuild ภายใน 1 เฟรม) |
-
-เทสต์เบราว์เซอร์ต้องมี Chrome ที่ `C:/Program Files/Google/Chrome/Application/chrome.exe`
-(override ด้วย `CHROME_PATH`) และต้องมี server เสิร์ฟอยู่ (`npm run preview` แล้วตั้ง `PAGE_URL` ถ้าไม่ใช่ 4173)
-
 ## ข้อจำกัดที่รู้อยู่ (ตั้งใจให้เรียบง่าย)
 
 - ยังไม่มี ambient occlusion / แสงจากบล็อก — ใช้สี vertex ต่อหน้า (บนสว่าง ด้านกลาง ล่างมืด)
 - greedy meshing รวม quad ใหญ่แล้วยืด UV ของ tile นั้นให้เต็ม quad (nearest filter) — texture จึงดูเป็นก้อนใหญ่
   ไม่ repeat ตามจำนวนบล็อก (แก้ได้ด้วย data-array texture + shader patch ถ้าต้องการเป๊ะ)
 - น้ำจมอยู่ใน mesh เดียวกับของแข็ง และใช้ alpha จาก vertex color (0.72) ไม่มีการ sort ใบน้ำแยก
-- collision/ฟิสิกส์/player controller มีแล้วใน `src/player/`; ขุด/วาง + hotbar/HUD + save/load เสร็จแล้วใน `src/interaction/`
-- save เก็บเฉพาะ diff จาก terrain + ตำแหน่งผู้เล่น + hotbar (ดู `docs/save-format.md`) — ไม่มี sync ข้ามเครื่อง/หลายโปรไฟล์
-  และผู้เล่นที่ถูกวางทับ (block ที่อยู่ในตัว) จะไม่ถูกดันออก แต่ระบบวางจะปฏิเสธไม่ให้เกิดตั้งแต่แรก
+- save เก็บเฉพาะ diff จาก terrain + ตำแหน่งผู้เล่น + hotbar (ดู `docs/save-format.md`) — อยู่แค่ใน
+  localStorage ของเบราว์เซอร์นั้น ไม่มี sync ข้ามเครื่อง/หลายโปรไฟล์ และผู้เล่นที่ถูกวางทับจะไม่ถูกดันออก
+  (ระบบวางปฏิเสธไม่ให้เกิดตั้งแต่แรก)
+- ต้องมี WebGL2 (three.js r186 ไม่รองรับ WebGL1 แล้ว) — เบราว์เซอร์รุ่นเก่ามากจะเล่นไม่ได้
+- บันไดคุณภาพ **ไม่ขึ้นเกิน render distance เริ่มต้น (6)** โดยตั้งใจ — เครื่องแรงจะได้ภาพเท่ากันทุกเครื่อง
+  และการขึ้นขั้นใช้เวลานานกว่าการลดขั้น (6 วิ vs 2.5 วิ) เพื่อไม่ให้ภาพกระพริบไปมา
+- บันไดตัดสินใจจาก fps ของ `requestAnimationFrame` ซึ่งติด vsync ที่ 60 → เครื่องที่ทำได้เกิน 60 fps
+  จะไม่มีทางลดขั้น (ถูกต้องตามพฤติกรรมที่ต้องการ) การพิสูจน์จึงใช้ CPU throttle แทน (ดูตารางด้านบน)
+- เทสต์เบราว์เซอร์รันบน **Chrome (Chromium) เท่านั้นบนเครื่องนี้**: Firefox ไม่ได้ติดตั้ง และ Safari
+  รันบน Windows ไม่ได้ → checklist บน Firefox/Safari ยังไม่ได้ยืนยัน (โค้ดใช้ API มาตรฐาน:
+  pointer lock + drag fallback, WebGL2, localStorage, ไม่มี vendor-specific)
+- ปุ่ม HUD กดได้หลัง ESC เท่านั้น (ข้อจำกัดของ pointer lock ไม่ใช่บั๊ก)
 
-## งานถัดไปที่ต่อจาก engine นี้
+## งานที่เหลือต่อจากนี้
 
-- player controller เสร็จแล้วใน `src/player/`; ใช้ `createGame(canvas, { controls: 'none' })`
-  แล้วสร้าง `FirstPersonPlayer({ world: game.world, camera: game.camera, element: canvas })`
-  จากนั้น `player.mount(game)` เพื่อให้ callback ทำงานก่อน streaming + render
-- ขุด/วาง + hotbar/HUD + save/load: **เสร็จแล้ว** ใน `src/interaction/` (ดูหัวข้อ "Interaction" ข้างบน และ `docs/save-format.md`)
-  สิ่งที่เหลือคือ *รวมของจริง* เข้าหน้าเดียว (งานของ `t_5f9c7bb5`): สร้าง `FirstPersonPlayer` แล้วห่อด้วย
-  `createFirstPersonPlayerAdapter(player)` ส่งให้ `new InteractionSession({...})`, ต่อเมาส์ซ้าย/ขวาเข้ากับ
-  `session.controller.beginDig/endDig/beginPlace/endPlace`, ส่ง keydown ให้ `session.handleKeyDown(event)` ก่อน
-  (เพื่อไม่ให้ 1-9/F3 ไปถึง player) และ wheel ให้ `session.handleWheel(deltaY)`
+- ยืนยัน acceptance บน Firefox และ Safari บนเครื่องที่ติดตั้งได้ (โค้ดพร้อม แต่ยังไม่มีหลักฐาน)
+- ถ้าต้องการภาพเนียนกว่านี้: data-array texture (แก้ UV repeat ของ greedy meshing) และ ambient occlusion
+- ถ้าจะเล่นหลายคน/เซฟขึ้น cloud: ต้องมี backend (ตอนนี้เป็น static ล้วน)
