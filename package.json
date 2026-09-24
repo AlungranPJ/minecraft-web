@@ -1,0 +1,38 @@
+{
+  "name": "minecraft-web",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Browser voxel engine (Three.js + Vite): 16x16x64 chunks, greedy meshing, noise terrain, streaming chunk manager",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --port 4173 --strictPort",
+    "typecheck": "tsc --noEmit",
+    "test:smoke": "tsx tests/engine.smoke.test.ts",
+    "test:interaction": "tsx tests/interaction.smoke.test.ts",
+    "test:player": "tsx tests/player.smoke.test.ts",
+    "test:perf": "tsx tests/perf.smoke.test.ts",
+    "test:browser": "node tests/browser.test.mjs",
+    "test:game:browser": "node tests/game.browser.test.mjs",
+    "test:interaction:browser": "node tests/interaction.browser.test.mjs",
+    "test:player:browser": "node tests/player.browser.test.mjs",
+    "perf:report": "node tests/perf.browser.mjs"
+  },
+  "keywords": [
+    "voxel",
+    "three.js",
+    "minecraft"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "three": "^0.186.0"
+  },
+  "devDependencies": {
+    "@types/three": "^0.186.0",
+    "puppeteer-core": "^25.12.0",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.0"
+  }
+}

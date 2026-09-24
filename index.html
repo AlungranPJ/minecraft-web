@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="data:," />
+    <meta name="description" content="เกม voxel เล่นบนเบราว์เซอร์: เดิน ขุด วางบล็อก และบันทึกโลกไว้ใน localStorage" />
+    <title>minecraft-web — voxel game</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        overflow: hidden;
+        background: #0d1420;
+        color: #f2f7ff;
+        font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      }
+      #app {
+        position: fixed;
+        inset: 0;
+      }
+      canvas#game {
+        display: block;
+        width: 100%;
+        height: 100%;
+        cursor: crosshair;
+        touch-action: none;
+      }
+
+      /* ------------------------------------------------- loading screen ----- */
+      #boot {
+        position: fixed;
+        inset: 0;
+        z-index: 40;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
+        background: radial-gradient(circle at 50% 30%, #16233a, #0a0f18 70%);
+      }
+      #boot h1 {
+        margin: 0;
+        font-size: 20px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        opacity: 0.9;
+      }
+      #boot-track {
+        width: min(320px, 60vw);
+        height: 6px;
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        border-radius: 4px;
+        overflow: hidden;
+        background: rgba(255, 255, 255, 0.06);
+      }
+      #boot-bar {
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, #8fe388, #2fa84f);
+        transition: width 120ms linear;
+      }
+      #boot-text {
+        opacity: 0.75;
+        font-size: 12px;
+      }
+
+      /* -------------------------------------------------- click to play ----- */
+      #play {
+        position: fixed;
+        inset: 0;
+        z-index: 30;
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 16px;
+        text-align: center;
+        padding: 24px;
+        box-sizing: border-box;
+        background: rgba(8, 12, 20, 0.72);
+        cursor: pointer;
+        backdrop-filter: blur(2px);
+      }
+      #play.shown {
+        display: flex;
+      }
+      #play h1 {
+        margin: 0;
+        font-size: 26px;
+        letter-spacing: 0.08em;
+      }
+      #play .go {
+        padding: 10px 22px;
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        border-radius: 8px;
+        background: rgba(28, 40, 58, 0.85);
+        font-size: 15px;
+      }
+      #play ul {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        max-width: 640px;
+        opacity: 0.85;
+        font-size: 12.5px;
+        line-height: 1.8;
+      }
+      #play li b {
+        color: #ffd166;
+        font-weight: 700;
+      }
+      #play .note {
+        opacity: 0.55;
+        font-size: 11.5px;
+      }
+      #play a {
+        color: #8fc7f0;
+      }
+
+      /* ------------------------------------------------------- hint bar ----- */
+      #hint {
+        position: fixed;
+        left: 50%;
+        bottom: 62px;
+        transform: translateX(-50%);
+        z-index: 20;
+        padding: 4px 10px;
+        border-radius: 6px;
+        background: rgba(10, 14, 22, 0.5);
+        pointer-events: none;
+        font-size: 11.5px;
+        opacity: 0.85;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <canvas id="game"></canvas>
+    </div>
+
+    <div id="boot">
+      <h1>minecraft-web</h1>
+      <div id="boot-track"><div id="boot-bar"></div></div>
+      <div id="boot-text">กำลังสร้างโลก… 0%</div>
+    </div>
+
+    <div id="play">
+      <h1>minecraft-web</h1>
+      <div class="go">คลิกเพื่อเล่น</div>
+      <ul>
+        <li><b>W A S D</b> เดิน · <b>Shift</b> วิ่ง · <b>Space</b> กระโดด</li>
+        <li><b>เมาส์</b> มองรอบตัว (คลิกจอ = ล็อกเมาส์, <b>ESC</b> ปลดล็อก)</li>
+        <li><b>คลิกซ้ายค้าง</b> ขุดบล็อก · <b>คลิกขวา</b> วางบล็อกที่เลือกไว้</li>
+        <li><b>1-9</b> หรือ <b>ล้อเมาส์</b> เลือกช่องของ hotbar ด้านล่าง</li>
+        <li><b>F3</b> เปิด/ปิดข้อมูล debug · ปุ่ม <b>Reset world</b> = เริ่มโลกใหม่ (คลิกสองครั้ง)</li>
+      </ul>
+      <div class="note">
+        โลกที่ขุด/วางจะถูกบันทึกอัตโนมัติทุก 10 วินาที และตอนปิดแท็บ (เก็บใน localStorage ของเบราว์เซอร์)
+      </div>
+      <div class="note">หน้าเดโมของ engine: <a href="./engine.html">engine.html</a></div>
+    </div>
+
+    <div id="hint">คลิกที่จอเพื่อล็อกเมาส์ · ESC เพื่อปลดล็อก</div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
